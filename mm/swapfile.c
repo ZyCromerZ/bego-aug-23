@@ -639,6 +639,7 @@ static void add_to_avail_list(struct swap_info_struct *p)
 static void swap_range_free(struct swap_info_struct *si, unsigned long offset,
 			    unsigned int nr_entries)
 {
+	unsigned long begin = offset;
 	unsigned long end = offset + nr_entries - 1;
 	void (*swap_slot_free_notify)(struct block_device *, unsigned long);
 
@@ -664,6 +665,7 @@ static void swap_range_free(struct swap_info_struct *si, unsigned long offset,
 			swap_slot_free_notify(si->bdev, offset);
 		offset++;
 	}
+	clear_shadow_from_swap_cache(si->type, begin, end);
 }
 
 static int scan_swap_map_slots(struct swap_info_struct *si,
@@ -1326,6 +1328,13 @@ int page_swapcount(struct page *page)
 		unlock_cluster_or_swap_info(p, ci);
 	}
 	return count;
+}
+
+int __swap_count(struct swap_info_struct *si, swp_entry_t entry)
+{
+	pgoff_t offset = swp_offset(entry);
+
+	return swap_count(si->swap_map[offset]);
 }
 
 static int swap_swapcount(struct swap_info_struct *si, swp_entry_t entry)
@@ -2682,6 +2691,8 @@ SYSCALL_DEFINE1(swapoff, const char __user *, specialfile)
 	err = 0;
 	atomic_inc(&proc_poll_event);
 	wake_up_interruptible(&proc_poll_wait);
+	/* stop tracking anon if the multigenerational lru is turned off */
+	lru_gen_set_state(false, false, true);
 
 out_dput:
 	filp_close(victim, NULL);
@@ -3191,6 +3202,9 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
 	if (bdi_cap_stable_pages_required(inode_to_bdi(inode)))
 		p->flags |= SWP_STABLE_WRITES;
 
+	if (bdi_cap_synchronous_io(inode_to_bdi(inode)))
+		p->flags |= SWP_SYNCHRONOUS_IO;
+
 	if (p->bdev && blk_queue_nonrot(bdev_get_queue(p->bdev))) {
 		int cpu;
 		unsigned long ci, nr_cluster;
@@ -3294,6 +3308,8 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
 	mutex_unlock(&swapon_mutex);
 	atomic_inc(&proc_poll_event);
 	wake_up_interruptible(&proc_poll_wait);
+	/* start tracking anon if the multigenerational lru is turned on */
+	lru_gen_set_state(true, false, true);
 
 	if (S_ISREG(inode->i_mode))
 		inode->i_flags |= S_SWAPFILE;
@@ -3474,10 +3490,15 @@ int swapcache_prepare(swp_entry_t entry)
 	return __swap_duplicate(entry, SWAP_HAS_CACHE);
 }
 
+struct swap_info_struct *swp_swap_info(swp_entry_t entry)
+{
+	return swap_info[swp_type(entry)];
+}
+
 struct swap_info_struct *page_swap_info(struct page *page)
 {
-	swp_entry_t swap = { .val = page_private(page) };
-	return swap_info[swp_type(swap)];
+	swp_entry_t entry = { .val = page_private(page) };
+	return swp_swap_info(entry);
 }
 
 /*
@@ -3485,7 +3506,6 @@ struct swap_info_struct *page_swap_info(struct page *page)
  */
 struct address_space *__page_file_mapping(struct page *page)
 {
-	VM_BUG_ON_PAGE(!PageSwapCache(page), page);
 	return page_swap_info(page)->swap_file->f_mapping;
 }
 EXPORT_SYMBOL_GPL(__page_file_mapping);
@@ -3493,7 +3513,6 @@ EXPORT_SYMBOL_GPL(__page_file_mapping);
 pgoff_t __page_file_index(struct page *page)
 {
 	swp_entry_t swap = { .val = page_private(page) };
-	VM_BUG_ON_PAGE(!PageSwapCache(page), page);
 	return swp_offset(swap);
 }
 EXPORT_SYMBOL_GPL(__page_file_index);
