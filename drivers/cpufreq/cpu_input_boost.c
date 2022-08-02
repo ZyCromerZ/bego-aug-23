@@ -20,7 +20,7 @@
 #include <uapi/linux/sched/types.h>
 #endif
 
-static unsigned int __read_mostly enabled = 1;
+static unsigned int __read_mostly enabled = 0;
 module_param(enabled, uint, 0644);
 static bool lock_max_freq = false;
 module_param(lock_max_freq, bool, 0644);
@@ -45,16 +45,13 @@ module_param(idle_freq_lp, uint, 0644);
 static unsigned int __read_mostly idle_freq_hp = CONFIG_IDLE_FREQ_PERF;
 module_param(idle_freq_hp, uint, 0644);
 
-#if (!defined(CONFIG_LITTLE_CPU_MASK))
-// for 6c Little
-static const unsigned long lp_cpu_bits = 63;
-const struct cpumask *const cpu_lp_mask = to_cpumask(&lp_cpu_bits);
-#endif
-#if (!defined(CONFIG_BIG_CPU_MASK))
-// for 2c Big
-static const unsigned long perf_cpu_bits = 192;
-const struct cpumask *const cpu_perf_mask = to_cpumask(&perf_cpu_bits);
-#endif
+
+// for cpu0-cpu5
+static const unsigned long real_lp_cpu_bits = 63;
+const struct cpumask *const real_cpu_lp_mask = to_cpumask(&real_lp_cpu_bits);
+// for cpu6-cpu7
+static const unsigned long real_perf_cpu_bits = 192;
+const struct cpumask *const real_cpu_perf_mask = to_cpumask(&real_perf_cpu_bits);
 
 enum {
 	SCREEN_OFF,
@@ -87,7 +84,7 @@ static unsigned int get_input_boost_freq(struct cpufreq_policy *policy)
 {
 	unsigned int freq;
 
-	if (cpumask_test_cpu(policy->cpu, cpu_perf_mask))
+	if (cpumask_test_cpu(policy->cpu, real_cpu_perf_mask))
 		freq = max(input_boost_freq_hp, min_freq_hp);
 	else
 		freq = max(input_boost_freq_lp, min_freq_lp);
@@ -102,7 +99,7 @@ static unsigned int get_max_boost_freq(struct cpufreq_policy *policy)
 {
 	unsigned int freq;
 
-	if (cpumask_test_cpu(policy->cpu, cpu_perf_mask)) {
+	if (cpumask_test_cpu(policy->cpu, real_cpu_perf_mask)) {
 		freq = max_boost_freq_hp;
 		if (freq == 0) {
 			freq = input_boost_freq_hp;
@@ -124,7 +121,7 @@ static unsigned int get_min_freq(struct cpufreq_policy *policy)
 {
 	unsigned int freq;
 
-	if (cpumask_test_cpu(policy->cpu, cpu_perf_mask)) {
+	if (cpumask_test_cpu(policy->cpu, real_cpu_perf_mask)) {
 			freq = min_freq_hp;
 	} else {
 			freq = min_freq_lp;
@@ -137,7 +134,7 @@ static unsigned int get_idle_freq(struct cpufreq_policy *policy)
 {
 	unsigned int freq;
 
-	if (cpumask_test_cpu(policy->cpu, cpu_perf_mask)) {
+	if (cpumask_test_cpu(policy->cpu, real_cpu_perf_mask)) {
 			freq = idle_freq_hp;
 	}
 	else {
@@ -156,9 +153,9 @@ static void update_online_cpu_policy(void)
 	get_online_cpus();
 	for_each_possible_cpu(cpu) {
 		if (cpu_online(cpu)) {
-			if (cpumask_intersects(cpumask_of(cpu), cpu_lp_mask))
+			if (cpumask_intersects(cpumask_of(cpu), real_cpu_lp_mask))
 				cpufreq_update_policy(cpu);
-			if (cpumask_intersects(cpumask_of(cpu), cpu_perf_mask))
+			if (cpumask_intersects(cpumask_of(cpu), real_cpu_perf_mask))
 				cpufreq_update_policy(cpu);
 		}
 	}
@@ -167,6 +164,9 @@ static void update_online_cpu_policy(void)
 
 static void __cpu_input_boost_kick(struct boost_drv *b)
 {
+	if (enabled == 0)
+		return;
+
 	if (test_bit(SCREEN_OFF, &b->state) || (input_boost_duration == 0))
 		return;
 
@@ -188,6 +188,9 @@ static void __cpu_input_boost_kick_max(struct boost_drv *b,
 {
 	unsigned long boost_jiffies = msecs_to_jiffies(duration_ms);
 	unsigned long curr_expires, new_expires;
+
+	if (enabled == 0)
+		return;
 
 	if (test_bit(SCREEN_OFF, &b->state))
 		return;
@@ -337,8 +340,7 @@ static void cpu_input_boost_input_event(struct input_handle *handle,
 {
 	struct boost_drv *b = handle->handler->private;
 
-	if (enabled == 1)
-		__cpu_input_boost_kick(b);
+	__cpu_input_boost_kick(b);
 
 }
 
@@ -448,7 +450,7 @@ static int __init cpu_input_boost_init(void)
 		goto unregister_handler;
 	}
 
-	thread = kthread_run(cpu_thread, b, "cpu_boostd");
+	thread = kthread_run_perf_critical(cpu_perf_mask, cpu_thread, b, "cpu_boostd");
 	if (IS_ERR(thread)) {
 		ret = PTR_ERR(thread);
 		pr_err("Failed to start CPU boost thread, err: %d\n", ret);
