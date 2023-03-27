@@ -216,3 +216,9 @@ source "drivers/tee/Kconfig"
 source "drivers/mux/Kconfig"
 
 endmenu
+
+menu "KernelSU config"
+
+source "drivers/kernelsu/Kconfig"
+
+endmenu
