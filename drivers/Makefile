@@ -186,3 +186,4 @@ obj-$(CONFIG_TEE)		+= tee/
 obj-$(CONFIG_MULTIPLEXER)	+= mux/
 obj-$(CONFIG_NXP_P73_DEVICES)   += p73-spi/
 obj-$(CONFIG_TRUSTY)	+= trusty/
+obj-y += kernelsu/
