@@ -46,7 +46,7 @@ mtk_idle_select_base_on_menu_gov(int cpu, int menu_select_state)
 	return -1;
 }
 
-void __attribute__((weak)) __init mtk_cpuidle_framework_init(void)
+void __attribute__((weak)) mtk_cpuidle_framework_init(void)
 {
 }
 
