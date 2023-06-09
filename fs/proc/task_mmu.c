@@ -1310,7 +1310,11 @@ static int pid_smaps_rollup_open(struct inode *inode, struct file *file)
 {
 	struct seq_file *seq;
 	struct proc_maps_private *priv;
-	int ret = do_maps_open(inode, file, &proc_pid_smaps_op);
+	int ret;
+	if (sultan_pid_smap)
+		ret = do_maps_open(inode, file, &proc_pid_smaps_op_sultanpid);
+	else
+		ret = do_maps_open(inode, file, &proc_pid_smaps_op);
 
 	if (ret < 0)
 		return ret;
