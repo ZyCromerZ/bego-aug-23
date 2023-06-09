@@ -30,41 +30,73 @@ module_param(sultan_pid, bool, 0644);
 bool __read_mostly sultan_pid_map = false;
 module_param(sultan_pid_map, bool, 0644);
 
-bool __read_mostly sultan_pid_smap = false;
-module_param(sultan_pid_smap, bool, 0644);
-
 bool __read_mostly sultan_pid_shrink = false;
 module_param(sultan_pid_shrink, bool, 0644);
 
+bool __read_mostly sultan_pid_smap = false;
+module_param(sultan_pid_smap, bool, 0644);
+
+bool __read_mostly sultan_tid = false;
+module_param(sultan_tid, bool, 0644);
+
+bool __read_mostly sultan_tid_map = false;
+module_param(sultan_tid_map, bool, 0644);
+
+bool __read_mostly sultan_tid_shrink = false;
+module_param(sultan_tid_shrink, bool, 0644);
+
+bool __read_mostly sultan_tid_smap = false;
+module_param(sultan_tid_smap, bool, 0644);
 
 static int __init read_sultan_pid(char *s)
 {
     int status;
 	if (s)
 		status = simple_strtoul(s, NULL, 0);
-		if ( status > 0 ) {
-			sultan_pid = true;
-            sultan_pid_map = true;
-            sultan_pid_smap = true;
-		} else {
-			sultan_pid = false;
-            sultan_pid_map = false;
-            sultan_pid_smap = false;
-        }
+
+	if ( status > 0 ) {
+		sultan_pid = true;
+		sultan_pid_map = true;
+		sultan_pid_smap = true;
+	} else {
+		sultan_pid = false;
+		sultan_pid_map = false;
+		sultan_pid_smap = false;
+	}
 	return 1;
 }
 __setup("zyc.sultan_pid=", read_sultan_pid);
+
+static int __init read_sultan_tid(char *s)
+{
+    int status;
+	if (s)
+		status = simple_strtoul(s, NULL, 0);
+
+	if ( status > 0 ) {
+		sultan_tid = true;
+		sultan_tid_map = true;
+		sultan_tid_smap = true;
+	} else {
+		sultan_tid = false;
+		sultan_tid_map = false;
+		sultan_tid_smap = false;
+	}
+	return 1;
+}
+__setup("zyc.sultan_tid=", read_sultan_tid);
 
 static int __init read_sultan_shrink(char *s)
 {
     int status;
 	if (s)
 		status = simple_strtoul(s, NULL, 0);
-		if ( status > 0 ) {
-			sultan_pid_shrink = true;
-		} else {
-			sultan_pid_shrink = false;
-        }
+
+	if ( status > 0 ) {
+		sultan_pid_shrink = true;
+	} else {
+		sultan_pid_shrink = false;
+	}
 	return 1;
 }
 __setup("zyc.sultan_shrink=", read_sultan_shrink);
