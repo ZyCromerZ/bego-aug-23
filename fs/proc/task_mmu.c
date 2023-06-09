@@ -23,6 +23,7 @@
 #include <asm/elf.h>
 #include <asm/tlb.h>
 #include <asm/tlbflush.h>
+#include <misc/zyc_taskmmu.h>
 #include "internal.h"
 
 #define SEQ_PUT_DEC(str, val) \
@@ -774,7 +775,7 @@ static const struct seq_operations proc_tid_maps_op = {
 
 static const struct seq_operations proc_tid_maps_op_sultanpid = {
 	.start	= m_start_pid,
-	.next	= m_start_pid,
+	.next	= m_next_pid,
 	.stop	= m_stop,
 	.show	= show_tid_map
 };

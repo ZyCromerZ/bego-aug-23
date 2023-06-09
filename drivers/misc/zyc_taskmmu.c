@@ -67,7 +67,7 @@ static int __init read_sultan_pid(char *s)
 }
 __setup("zyc.sultan_pid=", read_sultan_pid);
 
-static int __init read_sultan_pid(char *s)
+static int __init read_sultan_tid(char *s)
 {
     int status;
 	if (s)
