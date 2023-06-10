@@ -13,7 +13,7 @@ do
     [[ "$stop" == "y" ]] && break
     git checkout $asu-SLMK && git pull . $asu --signoff --no-ff --no-commit || stop="y"
     git commit -sm "Merge Branch '$asu' into $asu-SLMK"
-    git pull . new-q-oss-up-SLMK --signoff || stop="y"
+    git pull . new-q-oss-up-SLMK --signoff  --no-ff --no-commit || stop="y"
     git commit -sm "Merge Branch 'new-q-oss-up-SLMK' into $asu-SLMK"
 done
 
