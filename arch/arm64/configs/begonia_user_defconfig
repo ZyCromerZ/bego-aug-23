@@ -589,7 +589,7 @@ CONFIG_RANDOMIZE_BASE=y
 #
 # Boot options
 #
-CONFIG_CMDLINE="console=tty0 console=ttyMT3,921600n1 root=/dev/ram vmalloc=496M slub_max_order=0 slub_debug=O "
+CONFIG_CMDLINE="console=tty0 console=ttyMT3,921600n1 root=/dev/ram vmalloc=496M slub_max_order=0 slub_debug=O cgroup_disable=pressure"
 CONFIG_CMDLINE_FROM_BOOTLOADER=y
 # CONFIG_CMDLINE_EXTEND is not set
 # CONFIG_CMDLINE_FORCE is not set
@@ -635,7 +635,7 @@ CONFIG_PM=y
 # CONFIG_PM_DEBUG is not set
 CONFIG_PM_OPP=y
 CONFIG_PM_CLK=y
-CONFIG_WQ_POWER_EFFICIENT_DEFAULT=y
+# CONFIG_WQ_POWER_EFFICIENT_DEFAULT is not set
 CONFIG_CPU_PM=y
 CONFIG_ARCH_HIBERNATION_POSSIBLE=y
 CONFIG_ARCH_SUSPEND_POSSIBLE=y
@@ -4403,12 +4403,6 @@ CONFIG_NVMEM=y
 #
 # CONFIG_FSI is not set
 # CONFIG_TEE is not set
-
-#
-# KernelSU config
-#
-CONFIG_KSU=y
-# CONFIG_KSU_DEBUG is not set
 
 #
 # Firmware Drivers
