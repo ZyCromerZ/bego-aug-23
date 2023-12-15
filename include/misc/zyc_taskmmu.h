@@ -14,7 +14,6 @@
  *
  */
 
-extern bool sultan_pid;
 extern bool sultan_pid_map;
-extern bool sultan_pid_smap;
 extern bool sultan_pid_shrink;
+extern bool sultan_tid_map;
