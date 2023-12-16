@@ -772,13 +772,6 @@ static const struct seq_operations proc_tid_maps_op = {
 	.show	= show_tid_map
 };
 
-static const struct seq_operations proc_tid_maps_op_sultanpid = {
-	.start	= m_start_pid,
-	.next	= m_start_pid,
-	.stop	= m_stop,
-	.show	= show_tid_map
-};
-
 static int pid_maps_open(struct inode *inode, struct file *file)
 {
 	if (sultan_pid)
@@ -789,10 +782,7 @@ static int pid_maps_open(struct inode *inode, struct file *file)
 
 static int tid_maps_open(struct inode *inode, struct file *file)
 {
-	if (sultan_tid)
-		return do_maps_open(inode, file, &proc_tid_maps_op_sultanpid);
-	else
-		return do_maps_open(inode, file, &proc_tid_maps_op);
+	return do_maps_open(inode, file, &proc_tid_maps_op);
 }
 
 const struct file_operations proc_pid_maps_operations = {
@@ -1290,13 +1280,6 @@ static const struct seq_operations proc_tid_smaps_op = {
 	.show	= show_tid_smap
 };
 
-static const struct seq_operations proc_tid_smaps_op_sultanpid = {
-	.start	= m_start_pid,
-	.next	= m_next_pid,
-	.stop	= m_stop,
-	.show	= show_tid_smap
-};
-
 static int pid_smaps_open(struct inode *inode, struct file *file)
 {
 	if (sultan_pid_smap)
@@ -1326,10 +1309,7 @@ static int pid_smaps_rollup_open(struct inode *inode, struct file *file)
 
 static int tid_smaps_open(struct inode *inode, struct file *file)
 {
-	if (sultan_tid_smap)
-		return do_maps_open(inode, file, &proc_tid_smaps_op_sultanpid);
-	else
-		return do_maps_open(inode, file, &proc_tid_smaps_op);
+	return do_maps_open(inode, file, &proc_tid_smaps_op);
 }
 
 const struct file_operations proc_pid_smaps_operations = {
@@ -2477,13 +2457,6 @@ static const struct seq_operations proc_tid_numa_maps_op = {
 	.show   = show_tid_numa_map,
 };
 
-static const struct seq_operations proc_tid_numa_maps_op_sultanpid = {
-	.start  = m_start_pid,
-	.next   = m_next_pid,
-	.stop   = m_stop,
-	.show   = show_tid_numa_map,
-};
-
 static int numa_maps_open(struct inode *inode, struct file *file,
 			  const struct seq_operations *ops)
 {
@@ -2501,10 +2474,7 @@ static int pid_numa_maps_open(struct inode *inode, struct file *file)
 
 static int tid_numa_maps_open(struct inode *inode, struct file *file)
 {
-	if (sultan_tid_map)
-		return numa_maps_open(inode, file, &proc_tid_numa_maps_op_sultanpid);
-	else
-		return numa_maps_open(inode, file, &proc_tid_numa_maps_op);
+	return numa_maps_open(inode, file, &proc_tid_numa_maps_op);
 }
 
 const struct file_operations proc_pid_numa_maps_operations = {
