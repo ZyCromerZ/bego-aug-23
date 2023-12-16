@@ -373,7 +373,7 @@ struct core_state {
 
 struct kioctx_table;
 struct mm_struct {
-	struct vm_area_struct *mmap, *stack_vma;	/* list of VMAs */
+	struct vm_area_struct *mmap;		/* list of VMAs */
 	struct rb_root mm_rb;
 #ifdef CONFIG_SPECULATIVE_PAGE_FAULT
 	rwlock_t mm_rb_lock;
@@ -415,8 +415,9 @@ struct mm_struct {
 	 */
 	atomic_t mm_count;
 
-#ifdef CONFIG_MMU
-	atomic_long_t pgtables_bytes;		/* PTE page table pages */
+	atomic_long_t nr_ptes;			/* PTE page table pages */
+#if CONFIG_PGTABLE_LEVELS > 2
+	atomic_long_t nr_pmds;			/* PMD page table pages */
 #endif
 	int map_count;				/* number of VMAs */
 
